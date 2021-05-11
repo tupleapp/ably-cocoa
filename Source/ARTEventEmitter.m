@@ -91,8 +91,10 @@
         return;
     }
     [self invalidate];
-    if (_eventHandler && _eventHandler.userQueue) {
-        dispatch_async(_eventHandler.userQueue, ^{
+
+    ARTEventEmitter *eventHandler = _eventHandler;
+    if (eventHandler && eventHandler.userQueue) {
+        dispatch_async(eventHandler.userQueue, ^{
             [self->_center removeObserver:self->_token];
             self->_token = nil;
         });
@@ -137,10 +139,17 @@
     if (_timerIsRunning) {
         NSAssert(false, @"timer is already running");
     }
+
+    ARTEventEmitter *eventHandler = _eventHandler;
+    if (eventHandler == nil) {
+        return;
+    }
+
     _timerIsRunning = true;
 
     __weak ARTEventListener *weakSelf = self;
-    _work = artDispatchScheduled(_timeoutDeadline, [_eventHandler queue], ^{
+
+    _work = artDispatchScheduled(_timeoutDeadline, [eventHandler queue], ^{
         ARTEventListener *strongSelf = weakSelf;
         if (strongSelf != nil) {
             [strongSelf timeout];
